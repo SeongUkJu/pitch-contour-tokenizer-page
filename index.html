@@ -32,6 +32,9 @@
     #img-modal .modal-content { max-width: 92vw; width: auto; }
     #img-modal img { max-height: 90vh; width: auto; max-width: 92vw; background: #fff; border-radius: 6px; }
 
+    /* global scale: 데스크톱에서 페이지 전체를 67%로 렌더링 (브라우저 67% 축소와 동일한 배율) */
+    @media screen and (min-width: 769px) { body { zoom: 0.67; } }
+
     /* layout width */
     .section > .container { max-width: 1880px; }
 
@@ -141,7 +144,7 @@
       <p>
         The model is a VQ-VAE over fixed-length pitch-contour segments.
         An encoder maps each segment to a latent vector, vector quantization assigns it to the nearest codebook entry, and a decoder reconstructs the contour from the selected entry, so that every segment is represented by a single discrete token.
-        The reconstruction loss is evaluated under the <b>best alignment among a set of candidate temporal and pitch-domain transformations</b> of the decoded contour, and <b>only the minimum error is backpropagated</b>.
+        The reconstruction loss is evaluated under the best alignment among a set of candidate temporal and pitch-domain transformations of the decoded contour, and only the minimum error is backpropagated.
         This keeps the tokens stable across segmentation positions and robust to differences in key and tempo, so each token captures a local contour shape.
       </p>
     </div>
