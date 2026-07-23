@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <!-- TODO(camera-ready): update og/description metadata with final author list and page URL -->
+  <meta name="description" content="Demo page: Pitch Contour Tokenization using VQ-VAE and Its Application on Korean Traditional Music Analysis (ISMIR 2026)">
+  <meta property="og:title" content="Pitch Contour Tokenization using VQ-VAE"/>
+  <meta property="og:description" content="A VQ-VAE tokenizer that learns a discrete vocabulary of local pitch-contour patterns from Korean traditional music."/>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Pitch Contour Tokenization using VQ-VAE</title>
+  <link rel="icon" type="image/x-icon" href="static/favicon.ico">
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+
+  <link rel="stylesheet" href="static/css/bulma.min.css">
+  <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="static/css/index.css">
+  <script defer src="static/js/fontawesome.all.min.js"></script>
+  <style>
+    .token-card img { width: 100%; border: 1px solid #e5e5e5; border-radius: 6px; }
+    .token-card audio { width: 100%; height: 3.5rem; margin-top: 0.4rem; }
+    .token-caption { font-size: 1.2rem; color: #555; margin-top: 0.3rem; }
+    .token-card .token-caption { text-align: center; }
+    .content p { font-size: 1.4rem; }
+    .category-cell p.has-text-weight-semibold { font-size: 1.4rem; }
+    .token-card p.has-text-weight-semibold { font-size: 1.25rem; }
+    .category-cell { display: flex; flex-direction: column; justify-content: center; }
+    @media screen and (min-width: 769px) { .category-cell { flex: none; width: 29%; } }
+    .section-divider { border-top: 1px solid #eee; margin: 1.5rem 0; }
+    .ab-box { background: #f7f7f9; border-radius: 8px; padding: 1.25rem; }
+    .token-card img { cursor: zoom-in; }
+    #img-modal .modal-content { max-width: 92vw; width: auto; }
+    #img-modal img { max-height: 90vh; width: auto; max-width: 92vw; background: #fff; border-radius: 6px; }
+
+    /* layout width */
+    .section > .container { max-width: 1880px; }
+
+    /* hero sizing */
+    .hero .container.is-max-desktop { max-width: 1350px; }
+    .hero .publication-title { font-size: 3rem; }
+    .hero .publication-authors.is-size-5 { font-size: 1.5rem !important; }
+    .hero .publication-authors.is-size-6 { font-size: 1.2rem !important; }
+    .publication-links .button { font-size: 1.15rem; }
+
+    /* navy palette */
+    :root { --navy: #1b2a4a; --navy-soft: #eef2f8; --navy-border: #d5dcea; }
+    .hero { background: var(--navy); }
+    .hero .title, .hero .publication-authors, .hero .author-block { color: #fff; }
+    .hero .publication-authors sup { color: #c9d4e8; }
+    .publication-links .button.is-dark { background-color: #fff; color: var(--navy); border: none; }
+    .publication-links .button.is-dark:hover { background-color: var(--navy-soft); color: var(--navy); }
+    .title:not(.hero .title) { color: var(--navy); }
+    .token-card img { border-color: var(--navy-border); }
+    .section-divider { border-top-color: var(--navy-border); }
+    .ab-box { background: var(--navy-soft); }
+    .footer { background-color: var(--navy-soft); }
+  </style>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+</head>
+<body>
+
+<!-- ===================== 1. Hero: title / authors / links ===================== -->
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-2 publication-title">Pitch Contour Tokenization using VQ-VAE<br>and Its Application on Korean Traditional Music Analysis</h1>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">Seonguk Ju<sup>1</sup>,</span>
+            <span class="author-block">Seola Cho<sup>1</sup>,</span>
+            <span class="author-block">Sooin Chung<sup>1</sup>,</span>
+            <span class="author-block">Danbinaerin Han<sup>2</sup>,</span>
+            <span class="author-block">Dasaem Jeong<sup>1</sup></span>
+          </div>
+          <div class="is-size-6 publication-authors">
+            <span class="author-block"><sup>1</sup>Sogang University, South Korea</span>&nbsp;&nbsp;
+            <span class="author-block"><sup>2</sup>KAIST, South Korea</span>
+          </div>
+          <div class="is-size-6 publication-authors">
+            <span class="author-block">{jinin5113, dasaemj}@sogang.ac.kr</span>
+          </div>
+          <div class="is-size-6 publication-authors">
+            <span class="author-block">ISMIR 2026</span>
+          </div>
+
+          <div class="column has-text-centered">
+            <div class="publication-links">
+              <!-- TODO: link to camera-ready PDF -->
+              <span class="link-block">
+                <a href="#" class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="fas fa-file-pdf"></i></span><span>Paper</span>
+                </a>
+              </span>
+              <!-- TODO: arXiv link when available -->
+              <!-- <span class="link-block">
+                <a href="#" class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="ai ai-arxiv"></i></span><span>arXiv</span>
+                </a>
+              </span> -->
+              <!-- TODO: confirm final GitHub org/repo URL -->
+              <span class="link-block">
+                <a href="https://github.com/SeongUkJu/pitch-contour-tokenizer" class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="fab fa-github"></i></span><span>Code</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a href="#bibtex" class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="fas fa-quote-right"></i></span><span>BibTeX</span>
+                </a>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 1.2. Abstract ===================== -->
+<section class="section">
+  <div class="container">
+    <h2 class="title is-3">Abstract</h2>
+    <div class="content has-text-justified" style="margin: 0;">
+      <p>
+        Computational analysis of music often relies on discrete representations, yet many musical traditions are organized around continuous pitch movement that resists segmentation into note-like units. 
+        For such traditions, the discrete units that analysis would build on are not given in advance. 
+        We address this gap by learning a <b>vocabulary of local pitch-contour patterns</b> directly from unlabeled audio, using a VQ-VAE that quantizes fixed-length contour segments into a finite codebook. 
+        To make the learned tokens stable across segmentation positions and small variations in timing and pitch range, we train the model with a reconstruction objective evaluated under the <b>best alignment among a set of candidate temporal and pitch-domain transformations</b>. 
+        Applied to Korean traditional music, the learned tokens recover information about expert-defined <i>sigimsae</i> categories without supervision, and in <i>pansori</i> individual tokens align with the two principal modes, <i>Gyemyeonjo</i> and <i>Ujo</i>, supporting their use as units for corpus-level analysis of contour-centric traditions.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 1.5. Model architecture ===================== -->
+<section class="section">
+  <div class="container">
+    <h2 class="title is-3">Model Architecture</h2>
+    <div class="content has-text-justified" style="margin: 0;">
+      <p>
+        The model is a VQ-VAE over fixed-length pitch-contour segments.
+        An encoder maps each segment to a latent vector, vector quantization assigns it to the nearest codebook entry, and a decoder reconstructs the contour from the selected entry, so that every segment is represented by a single discrete token.
+        The reconstruction loss is evaluated under the <b>best alignment among a set of candidate temporal and pitch-domain transformations</b> of the decoded contour, and <b>only the minimum error is backpropagated</b>.
+        This keeps the tokens stable across segmentation positions and robust to differences in key and tempo, so each token captures a local contour shape.
+      </p>
+    </div>
+    <div class="token-card" style="max-width: 70%; margin: 1.5rem auto 0;">
+      <!-- <img src="static/images/full_demo.png" alt="Architecture overview"> -->
+      <img src="static/images/full_demo_v.png" alt="Architecture overview">
+      <p class="token-caption">Overview of the proposed model.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 1.7. Quantitative results ===================== -->
+<section class="section">
+  <div class="container">
+    <h2 class="title is-3">Quantitative Results</h2>
+    <div class="content has-text-justified" style="margin: 0;">
+      <p>
+        We evaluate the learned tokens from two perspectives. <b>Token consistency</b> measures how stable
+        the tokenization is when the segmentation window is shifted: the agreement accuracy (Acc) between
+        tokens of shifted segmentations and the KL divergence (KLD) between the resulting token
+        distributions, for shift ranges of 0&ndash;60 and 0&ndash;124 frames.
+        <b>Downstream classification</b> reports macro-F1 and mAP for expert-labeled <i>sigimsae</i>
+        classification on the NIA dataset (all recordings and the vocal-only subset), predicting the
+        category from the assigned token. ED-TCN, a supervised approach, is included as a reference.
+      </p>
+    </div>
+
+    <div class="columns" style="margin-top: 1rem;">
+      <div class="column is-6">
+        <h3 class="title is-5">Token Consistency</h3>
+        <div class="table-container">
+          <table class="table is-striped is-hoverable is-fullwidth">
+            <thead>
+              <tr>
+                <th rowspan="2">Method</th>
+                <th colspan="2" class="has-text-centered">Acc &uarr;</th>
+                <th colspan="2" class="has-text-centered">KLD &darr;</th>
+              </tr>
+              <tr>
+                <th class="has-text-centered">0&ndash;60</th>
+                <th class="has-text-centered">0&ndash;124</th>
+                <th class="has-text-centered">0&ndash;60</th>
+                <th class="has-text-centered">0&ndash;124</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Autoencoder</td><td class="has-text-centered">0.112</td><td class="has-text-centered">0.124</td><td class="has-text-centered">1.748</td><td class="has-text-centered">2.099</td></tr>
+              <tr><td>VQ-VAE</td><td class="has-text-centered">0.410</td><td class="has-text-centered">0.453</td><td class="has-text-centered">0.817</td><td class="has-text-centered">1.045</td></tr>
+              <tr><td style="padding-left: 1.5em;">+ temporal align</td><td class="has-text-centered"><strong>0.548</strong></td><td class="has-text-centered"><strong>0.593</strong></td><td class="has-text-centered"><strong>0.485</strong></td><td class="has-text-centered"><strong>0.677</strong></td></tr>
+              <tr><td style="padding-left: 1.5em;">+ all transformations</td><td class="has-text-centered">0.424</td><td class="has-text-centered">0.471</td><td class="has-text-centered">0.697</td><td class="has-text-centered">0.941</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="column is-6">
+        <h3 class="title is-5">Downstream Classification</h3>
+        <div class="table-container">
+          <table class="table is-striped is-hoverable is-fullwidth">
+            <thead>
+              <tr>
+                <th rowspan="2">Method</th>
+                <th colspan="2" class="has-text-centered">\(F1_{macro}\) &uarr;</th>
+                <th colspan="2" class="has-text-centered">mAP &uarr;</th>
+              </tr>
+              <tr>
+                <th class="has-text-centered">NIA (all)</th>
+                <th class="has-text-centered">NIA (vocal)</th>
+                <th class="has-text-centered">NIA (all)</th>
+                <th class="has-text-centered">NIA (vocal)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Autoencoder</td><td class="has-text-centered">0.298</td><td class="has-text-centered">0.315</td><td class="has-text-centered">0.270</td><td class="has-text-centered">0.284</td></tr>
+              <tr><td>VQ-VAE</td><td class="has-text-centered">0.263</td><td class="has-text-centered">0.309</td><td class="has-text-centered">0.256</td><td class="has-text-centered">0.297</td></tr>
+              <tr><td style="padding-left: 1.5em;">+ temporal align</td><td class="has-text-centered">0.273</td><td class="has-text-centered">0.311</td><td class="has-text-centered">0.264</td><td class="has-text-centered">0.305</td></tr>
+              <tr><td style="padding-left: 1.5em;">+ all transformations</td><td class="has-text-centered"><strong>0.315</strong></td><td class="has-text-centered"><strong>0.342</strong></td><td class="has-text-centered"><strong>0.292</strong></td><td class="has-text-centered"><strong>0.334</strong></td></tr>
+              <tr>
+                <td><a href="https://arxiv.org/abs/2505.04419" target="_blank">ED-TCN</a> (supervised)</td>
+                <td class="has-text-centered">0.463</td><td class="has-text-centered">0.541</td>
+                <td class="has-text-centered">0.579</td><td class="has-text-centered">0.531</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<!-- ===================== 2. Sigimsae prototype tokens (VQ-VAE vs AE) ===================== -->
+<section class="section">
+  <div class="container">
+    <h2 class="title is-3">Sigimsae Prototype Tokens: VQ-VAE vs. Autoencoder</h2>
+    <div class="content has-text-justified" style="margin: 0;">
+      <p>
+        For each expert-defined <i>sigimsae</i> (ornament) category, we show the decoded contour of the most
+        representative token — the token with the highest \(P(\text{token}\mid\text{label})\) — for our VQ-VAE
+        (with the transformation-minimized loss) and the autoencoder baseline, together with real audio
+        excerpts of instances assigned to that token (original NIA recordings). The VQ-VAE recruits six distinct tokens matching each category's canonical
+        realization, while the autoencoder collapses the six categories onto only three tokens.
+      </p>
+      <p class="token-caption">
+        VQ-VAE tokens and P values match the paper (Fig.&nbsp;2) exactly. The autoencoder's UMAP+KMeans
+        tokenization was re-fitted for this page, so its token IDs differ from the paper figure
+        (196/16/190) while showing the same collapse behavior.
+      </p>
+    </div>
+
+    <div class="columns is-vcentered has-text-weight-semibold is-size-4" style="margin-top: 1rem;">
+      <div class="column category-cell">Category</div>
+      <div class="column">VQ-VAE (+ all transformations)</div>
+      <div class="column">Autoencoder baseline (re-fitted)</div>
+    </div>
+
+    <!-- Row 1: Southern-style descending flick (nam-kk) -->
+    <div class="section-divider"></div>
+    <div class="columns is-vcentered">
+      <div class="column category-cell">
+        <p class="has-text-weight-semibold">Southern-style descending flick</p>
+      </div>
+      <div class="column token-card">
+        <img src="static/images/sigimsae/vqvae/nam-kk/token_0058/token58 copy.png" alt="VQ-VAE Token 58">
+        <p class="token-caption">Token 58 · \(P(\text{token}\mid\text{S. desc. flick})=0.0196\)</p>
+        <audio controls preload="none" src="static/audio/sigimsae/vqvae/nam-kk/token_0058/token58_aud.wav"></audio>
+      </div>
+      <div class="column token-card">
+        <img src="static/images/sigimsae/ae/nam-kk/token_0168/token168 copy.png" alt="AE Token 168">
+        <p class="token-caption">Token 168 · \(P(\text{token}\mid\text{S. desc. flick})=0.0243\)</p>
+        <audio controls preload="none" src="static/audio/sigimsae/ae/nam-kk/token_0168/token168_aud.wav"></audio>
+      </div>
+    </div>
+
+    <!-- Row 2: Southern-style vibrato (nam-yo) -->
+    <div class="section-divider"></div>
+    <div class="columns is-vcentered">
+      <div class="column category-cell">
+        <p class="has-text-weight-semibold">Southern-style vibrato</p>
+      </div>
+      <div class="column token-card">
+        <img src="static/images/sigimsae/vqvae/nam-yo/token_0180/token180 copy.png" alt="VQ-VAE Token 180">
+        <p class="token-caption">Token 180 · \(P(\text{token}\mid\text{S. vibrato})=0.0361\)</p>
+        <audio controls preload="none" src="static/audio/sigimsae/vqvae/nam-yo/token_0180/token180_aud.wav"></audio>
+      </div>
+      <div class="column token-card">
+        <img src="static/images/sigimsae/ae/nam-yo/token_0168/token168 copy.png" alt="AE Token 168">
+        <p class="token-caption">Token 168 · \(P(\text{token}\mid\text{S. vibrato})=0.0689\)</p>
+        <audio controls preload="none" src="static/audio/sigimsae/ae/nam-yo/token_0168/token168_aud.wav"></audio>
+      </div>
+    </div>
+
+    <!-- Row 3: Western-style vibrato (seo-yo) -->
+    <div class="section-divider"></div>
+    <div class="columns is-vcentered">
+      <div class="column category-cell">
+        <p class="has-text-weight-semibold">Western-style vibrato</p>
+      </div>
+      <div class="column token-card">
+        <img src="static/images/sigimsae/vqvae/seo-yo/token_0135/token135 copy.png" alt="VQ-VAE Token 135">
+        <p class="token-caption">Token 135 · \(P(\text{token}\mid\text{W. vibrato})=0.0671\)</p>
+        <audio controls preload="none" src="static/audio/sigimsae/vqvae/seo-yo/token_0135/token135_aud.wav"></audio>
+      </div>
+      <div class="column token-card">
+        <img src="static/images/sigimsae/ae/seo-yo/token_0201/token201 copy.png" alt="AE Token 201">
+        <p class="token-caption">Token 201 · \(P(\text{token}\mid\text{W. vibrato})=0.0470\)</p>
+        <audio controls preload="none" src="static/audio/sigimsae/ae/seo-yo/token_0201/token201_aud.wav"></audio>
+      </div>
+    </div>
+
+    <!-- Row 4: Soft vibrato (jan-yo) -->
+    <div class="section-divider"></div>
+    <div class="columns is-vcentered">
+      <div class="column category-cell">
+        <p class="has-text-weight-semibold">Soft vibrato</p>
+      </div>
+      <div class="column token-card">
+        <img src="static/images/sigimsae/vqvae/jan-yo/token_0004/token4 copy.png" alt="VQ-VAE Token 4">
+        <p class="token-caption">Token 4 · \(P(\text{token}\mid\text{Soft vibrato})=0.1321\)</p>
+        <audio controls preload="none" src="static/audio/sigimsae/vqvae/jan-yo/token_0004/token4_aud.wav"></audio>
+      </div>
+      <div class="column token-card">
+        <img src="static/images/sigimsae/ae/jan-yo/token_0168/token168 copy.png" alt="AE Token 168">
+        <p class="token-caption">Token 168 · \(P(\text{token}\mid\text{Soft vibrato})=0.0305\)</p>
+        <audio controls preload="none" src="static/audio/sigimsae/ae/jan-yo/token_0168/token168_aud.wav"></audio>
+      </div>
+    </div>
+
+    <!-- Row 5: Upward accent (jeon) -->
+    <div class="section-divider"></div>
+    <div class="columns is-vcentered">
+      <div class="column category-cell">
+        <p class="has-text-weight-semibold">Upward accent</p>
+      </div>
+      <div class="column token-card">
+        <img src="static/images/sigimsae/vqvae/jeon/token_0243/token243 copy.png" alt="VQ-VAE Token 243">
+        <p class="token-caption">Token 243 · \(P(\text{token}\mid\text{Upward accent})=0.0759\)</p>
+        <audio controls preload="none" src="static/audio/sigimsae/vqvae/jeon/token_0243/token243_aud.wav"></audio>
+      </div>
+      <div class="column token-card">
+        <img src="static/images/sigimsae/ae/jeon/token_0178/token178 copy.png" alt="AE Token 178">
+        <p class="token-caption">Token 178 · \(P(\text{token}\mid\text{Upward accent})=0.0886\)</p>
+        <audio controls preload="none" src="static/audio/sigimsae/ae/jeon/token_0178/token178_aud.wav"></audio>
+      </div>
+    </div>
+
+    <!-- Row 6: Descending slide (toe) -->
+    <div class="section-divider"></div>
+    <div class="columns is-vcentered">
+      <div class="column category-cell">
+        <p class="has-text-weight-semibold">Descending slide</p>
+      </div>
+      <div class="column token-card">
+        <img src="static/images/sigimsae/vqvae/toe/token_0178/token178 copy.png" alt="VQ-VAE Token 178">
+        <p class="token-caption">Token 178 · \(P(\text{token}\mid\text{Desc. slide})=0.0685\)</p>
+        <audio controls preload="none" src="static/audio/sigimsae/vqvae/toe/token_0178/token178_aud.wav"></audio>
+      </div>
+      <div class="column token-card">
+        <img src="static/images/sigimsae/ae/toe/token_0178/token178 copy.png" alt="AE Token 178">
+        <p class="token-caption">Token 178 · \(P(\text{token}\mid\text{Desc. slide})=0.0281\)</p>
+        <audio controls preload="none" src="static/audio/sigimsae/ae/toe/token_0178/token178_aud.wav"></audio>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 3. Pansori mode tokens (Fig. 3) ===================== -->
+<section class="section" style="background-color: #eef2f8;">
+  <div class="container">
+    <h2 class="title is-3">Mode-Characteristic Tokens in Pansori</h2>
+    <div class="content has-text-justified" style="margin: 0;">
+      <p>
+        Tokens with the highest \(P(\text{mode}\mid\text{token})\) for the two principal pansori modes,
+        <i>Gyemyeonjo</i> and <i>Ujo</i>. Each panel shows the decoded token contour (black) with
+        median-subtracted original contours assigned to that token, a manually drawn staff-notation
+        transcription of a representative occurrence, and real audio excerpts (vocal-separated) of
+        instances assigned to the token.
+      </p>
+    </div>
+
+    <!-- <img src="static/images/mode_token/gyemyeonjo/87/token87g.png" alt="Token 87 decoded contour"> -->
+    <!-- Token 87 (Gyemyeonjo) -->
+    <div class="section-divider"></div>
+    <div class="columns is-vcentered">
+      <div class="column is-7 token-card">
+        <img src="static/images/mode_token/gyemyeonjo/87/token87.png" alt="Token 87 decoded contour">
+        <p class="token-caption">Token 87 · \(P(\text{Gyemyeonjo}\mid\text{token})=0.8376\) — upper-turn gesture</p>
+      </div>
+      <div class="column is-3 token-card">
+        <img src="static/images/mode_token/gyemyeonjo/87/token87g_staff.png" alt="Token 87 staff notation">
+        <p class="token-caption">Staff-notation transcription</p>
+      </div>
+      <div class="column is-2 token-card">
+        <p class="token-caption has-text-weight-semibold">Real excerpt (separated vocals)</p>
+        <audio controls preload="none" src="static/audio/mode_token/gyemyeonjo/87/token87g_aud.wav"></audio>
+        <p class="token-caption">Pattern excerpt</p>
+      </div>
+    </div>
+
+    <!-- Token 141 (Gyemyeonjo) -->
+    <div class="columns is-vcentered">
+      <div class="column is-7 token-card">
+        <img src="static/images/mode_token/gyemyeonjo/141/token141.png" alt="Token 141 decoded contour">
+        <p class="token-caption">Token 141 · \(P(\text{Gyemyeonjo}\mid\text{token})=0.8292\) — downward gliding contour</p>
+      </div>
+      <div class="column is-3 token-card">
+        <img src="static/images/mode_token/gyemyeonjo/141/token141g_staff.png" alt="Token 141 staff notation">
+        <p class="token-caption">Staff-notation transcription</p>
+      </div>
+      <div class="column is-2 token-card">
+        <p class="token-caption has-text-weight-semibold">Real excerpt (separated vocals)</p>
+        <audio controls preload="none" src="static/audio/mode_token/gyemyeonjo/141/token141g_aud.wav"></audio>
+        <p class="token-caption">Pattern excerpt</p>
+      </div>
+    </div>
+
+    <!-- Token 54 (Ujo) -->
+    <div class="columns is-vcentered">
+      <div class="column is-7 token-card">
+        <img src="static/images/mode_token/ujo/54/token54.png" alt="Token 54 decoded contour">
+        <p class="token-caption">Token 54 · \(P(\text{Ujo}\mid\text{token})=0.8126\) — descending major second with wide vibrato</p>
+      </div>
+      <div class="column is-3 token-card">
+        <img src="static/images/mode_token/ujo/54/token54_staff.png" alt="Token 54 staff notation">
+        <p class="token-caption">Staff-notation transcription</p>
+      </div>
+      <div class="column is-2 token-card">
+        <p class="token-caption has-text-weight-semibold">Real excerpt (separated vocals)</p>
+        <audio controls preload="none" src="static/audio/mode_token/ujo/54/token54_aud.wav"></audio>
+        <p class="token-caption">Pattern excerpt</p>
+      </div>
+    </div>
+
+    <!-- Token 171 (Ujo) -->
+    <div class="columns is-vcentered">
+      <div class="column is-7 token-card">
+        <img src="static/images/mode_token/ujo/171/token171.png" alt="Token 171 decoded contour">
+        <p class="token-caption">Token 171 · \(P(\text{Ujo}\mid\text{token})=0.8146\) — melodic phrase frequent in Ujo</p>
+      </div>
+      <div class="column is-3 token-card">
+        <img src="static/images/mode_token/ujo/171/token171_staff.png" alt="Token 171 staff notation">
+        <p class="token-caption">Staff-notation transcription</p>
+      </div>
+      <div class="column is-2 token-card">
+        <p class="token-caption has-text-weight-semibold">Real excerpt (separated vocals)</p>
+        <audio controls preload="none" src="static/audio/mode_token/ujo/171/token171_aud.wav"></audio>
+        <p class="token-caption">Pattern excerpt</p>
+      </div>
+    </div>
+
+    <!-- Additional tokens (decoded contour + audio only) -->
+    <div class="section-divider"></div>
+    <h3 class="title is-5" style="margin-top: 2rem;">More Mode-Characteristic Tokens</h3>
+    <div class="content has-text-justified" style="margin: 0 0 1.5rem;">
+      <p>
+        Additional tokens with high \(P(\text{mode}\mid\text{token})\), shown with the decoded token
+        contour and real audio excerpts of assigned instances.
+      </p>
+    </div>
+
+    <!-- Gyemyeonjo: tokens 148, 122, 143 -->
+    <div class="columns">
+      <div class="column is-4 token-card">
+        <img src="static/images/mode_token/gyemyeonjo/148/token148.png" alt="Token 148 decoded contour">
+        <p class="token-caption">Token 148 · \(P(\text{Gyemyeonjo}\mid\text{token})=0.8335\)</p>
+        <audio controls preload="none" src="static/audio/mode_token/gyemyeonjo/148/token148g_aud.wav"></audio>
+      </div>
+      <div class="column is-4 token-card">
+        <img src="static/images/mode_token/gyemyeonjo/122/token122.png" alt="Token 122 decoded contour">
+        <p class="token-caption">Token 122 · \(P(\text{Gyemyeonjo}\mid\text{token})=0.8247\)</p>
+        <audio controls preload="none" src="static/audio/mode_token/gyemyeonjo/122/token122g_aud.wav"></audio>
+      </div>
+      <div class="column is-4 token-card">
+        <img src="static/images/mode_token/gyemyeonjo/143/token143.png" alt="Token 143 decoded contour">
+        <p class="token-caption">Token 143 · \(P(\text{Gyemyeonjo}\mid\text{token})=0.8199\)</p>
+        <audio controls preload="none" src="static/audio/mode_token/gyemyeonjo/143/token143g_aud.wav"></audio>
+      </div>
+    </div>
+
+    <!-- Ujo: tokens 240, 137 -->
+    <div class="columns is-centered">
+      <div class="column is-4 token-card">
+        <img src="static/images/mode_token/ujo/240/token240.png" alt="Token 240 decoded contour">
+        <p class="token-caption">Token 240 · \(P(\text{Ujo}\mid\text{token})=0.8460\)</p>
+        <audio controls preload="none" src="static/audio/mode_token/ujo/240/token240_aud.wav"></audio>
+      </div>
+      <div class="column is-4 token-card">
+        <img src="static/images/mode_token/ujo/137/token137.png" alt="Token 137 decoded contour">
+        <p class="token-caption">Token 137 · \(P(\text{Ujo}\mid\text{token})=0.7936\)</p>
+        <audio controls preload="none" src="static/audio/mode_token/ujo/137/token137_aud.wav"></audio>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 4. BibTeX ===================== -->
+<section class="section" id="bibtex">
+  <div class="container content">
+    <h2 class="title">BibTeX</h2>
+    <pre><code>% TODO(camera-ready): replace with the final ISMIR 2026 BibTeX entry (page numbers, DOI)
+@inproceedings{ju2026pitchcontour,
+  title     = {Pitch Contour Tokenization using {VQ-VAE} and Its Application on Korean Traditional Music Analysis},
+  author    = {Ju, Seonguk and Cho, Seola and Chung, Sooin and Han, Danbinaerin and Jeong, Dasaem},
+  booktitle = {Proceedings of the 27th International Society for Music Information Retrieval Conference (ISMIR)},
+  year      = {2026}
+}</code></pre>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content has-text-centered">
+          <p style="font-size: 0.85rem;">
+            This page was built using the
+            <a href="https://github.com/liu-qilong/paper-page-template" target="_blank">paper-page-template</a>,
+            adapted from the
+            <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank">Academic Project Page Template</a>.
+            Licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">
+            Creative Commons Attribution-ShareAlike 4.0 International License</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- image lightbox -->
+<div class="modal" id="img-modal">
+  <div class="modal-background"></div>
+  <div class="modal-content has-text-centered">
+    <img id="img-modal-img" src="" alt="">
+  </div>
+  <button class="modal-close is-large" aria-label="close"></button>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var modal = document.getElementById('img-modal');
+  var modalImg = document.getElementById('img-modal-img');
+  document.querySelectorAll('.token-card img').forEach(function (img) {
+    img.addEventListener('click', function () {
+      modalImg.src = img.src;
+      modalImg.alt = img.alt;
+      modal.classList.add('is-active');
+    });
+  });
+  function closeModal() {
+    modal.classList.remove('is-active');
+    modalImg.src = '';
+  }
+  modal.querySelector('.modal-background').addEventListener('click', closeModal);
+  modal.querySelector('.modal-close').addEventListener('click', closeModal);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeModal();
+  });
+});
+</script>
+</body>
+</html>
