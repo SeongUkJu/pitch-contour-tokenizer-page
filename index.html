@@ -2,10 +2,10 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <!-- TODO(camera-ready): update og/description metadata with final author list and page URL -->
   <meta name="description" content="Demo page: Pitch Contour Tokenization using VQ-VAE and Its Application on Korean Traditional Music Analysis (ISMIR 2026)">
   <meta property="og:title" content="Pitch Contour Tokenization using VQ-VAE"/>
   <meta property="og:description" content="A VQ-VAE tokenizer that learns a discrete vocabulary of local pitch-contour patterns from Korean traditional music."/>
+  <meta property="og:url" content="https://seongukju.github.io/pitch-contour-tokenizer-page/"/>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <title>Pitch Contour Tokenization using VQ-VAE</title>
@@ -14,6 +14,7 @@
 
   <link rel="stylesheet" href="static/css/bulma.min.css">
   <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.9.4/css/academicons.min.css">
   <link rel="stylesheet" href="static/css/index.css">
   <script defer src="static/js/fontawesome.all.min.js"></script>
   <style>
@@ -89,21 +90,18 @@
 
           <div class="column has-text-centered">
             <div class="publication-links">
-              <!-- TODO: link to camera-ready PDF -->
               <span class="link-block">
-                <a href="#" class="external-link button is-normal is-rounded is-dark">
+                <a href="https://arxiv.org/pdf/2608.10979" target="_blank" class="external-link button is-normal is-rounded is-dark">
                   <span class="icon"><i class="fas fa-file-pdf"></i></span><span>Paper</span>
                 </a>
               </span>
-              <!-- TODO: arXiv link when available -->
-              <!-- <span class="link-block">
-                <a href="#" class="external-link button is-normal is-rounded is-dark">
+              <span class="link-block">
+                <a href="https://arxiv.org/abs/2608.10979" target="_blank" class="external-link button is-normal is-rounded is-dark">
                   <span class="icon"><i class="ai ai-arxiv"></i></span><span>arXiv</span>
                 </a>
-              </span> -->
-              <!-- TODO: confirm final GitHub org/repo URL -->
+              </span>
               <span class="link-block">
-                <a href="https://github.com/SeongUkJu/pitch-contour-tokenizer" class="external-link button is-normal is-rounded is-dark">
+                <a href="https://github.com/MALerLab/pitch-contour-tokenizer" target="_blank" class="external-link button is-normal is-rounded is-dark">
                   <span class="icon"><i class="fab fa-github"></i></span><span>Code</span>
                 </a>
               </span>
@@ -501,12 +499,14 @@
 <section class="section" id="bibtex">
   <div class="container content">
     <h2 class="title">BibTeX</h2>
-    <pre><code>% TODO(camera-ready): replace with the final ISMIR 2026 BibTeX entry (page numbers, DOI)
-@inproceedings{ju2026pitchcontour,
-  title     = {Pitch Contour Tokenization using {VQ-VAE} and Its Application on Korean Traditional Music Analysis},
-  author    = {Ju, Seonguk and Cho, Seola and Chung, Suin and Han, Danbinaerin and Jeong, Dasaem},
-  booktitle = {Proceedings of the 27th International Society for Music Information Retrieval Conference (ISMIR)},
-  year      = {2026}
+    <pre><code>@inproceedings{ju2026pitchcontour,
+  title         = {Pitch Contour Tokenization using {VQ-VAE} and Its Application on Korean Traditional Music Analysis},
+  author        = {Ju, Seonguk and Cho, Seola and Chung, Suin and Han, Danbinaerin and Jeong, Dasaem},
+  booktitle     = {Proceedings of the 27th International Society for Music Information Retrieval Conference (ISMIR)},
+  year          = {2026},
+  eprint        = {2608.10979},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.SD}
 }</code></pre>
   </div>
 </section>
